@@ -1,0 +1,203 @@
+
+import { useEffect, useState } from "react";
+import axios from "axios";
+import {
+    Search,
+    RefreshCw,
+    ChevronLeft,
+    ChevronRight
+} from "lucide-react";
+
+const API = "http://localhost:5000/api/transactions";
+
+function Transactions() {
+    const [transactions, setTransactions] = useState([]);
+    const [search, setSearch] = useState("");
+
+    const [page, setPage] = useState(1);
+    const [total, setTotal] = useState(0);
+    const [totalPages, setTotalPages] = useState(0);
+
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
+
+    const fetchTransactions = async () => {
+        try {
+            setLoading(true);
+            setError("");
+
+            const response = await axios.get(API, {
+                params: {
+                    page,
+                    limit: 20,
+                    search,
+                }
+            });
+
+            setTransactions(response.data.transactions);
+            setTotal(response.data.total);
+            setTotalPages(response.data.totalPages);
+
+        } catch (err) {
+            setError(
+                err.response?.data?.message ||
+                "Unable to load transactions."
+            );
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchTransactions();
+    }, [page, search]);
+
+    const formatDate = (date) => {
+        return new Date(date).toLocaleString("en-IN", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit"
+        });
+    };
+
+    return (
+        <div className="parts-page">
+
+            <div className="parts-heading">
+                <div>
+                    <h2>Outward Transactions</h2>
+                    <p>Track all tools issued to customers.</p>
+                </div>
+
+                <button
+                    className="refresh-btn"
+                    onClick={fetchTransactions}
+                    disabled={loading}
+                >
+                    <RefreshCw size={16} />
+                    Refresh
+                </button>
+            </div>
+
+            {error && (
+                <div className="error-message">{error}</div>
+            )}
+
+            <div className="parts-summary">
+                <div>
+                    <span>Total Transactions</span>
+                    <h2>{total}</h2>
+                </div>
+            </div>
+
+            <div className="parts-table-card">
+
+                <div className="parts-toolbar">
+                    <div>
+                        <h3>Transaction History</h3>
+                        <p>All tools issued to customers.</p>
+                    </div>
+
+                    <div className="parts-actions">
+
+                        <div className="parts-search">
+                            <Search size={18} />
+                            <input
+                                placeholder="Search part, customer, location..."
+                                value={search}
+                                onChange={e => {
+                                    setSearch(e.target.value);
+                                    setPage(1);
+                                }}
+                            />
+                        </div>
+
+                    </div>
+                </div>
+
+                <div className="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date & Time</th>
+                                <th>Part Number</th>
+                                <th>Description</th>
+                                <th>Quantity</th>
+                                <th>Customer Name</th>
+                                <th>Location</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {loading ? (
+                                <tr>
+                                    <td colSpan="8">Loading transactions...</td>
+                                </tr>
+                            ) : transactions.length === 0 ? (
+                                <tr>
+                                    <td colSpan="8">No transactions found.</td>
+                                </tr>
+                            ) : (
+                                transactions.map(transaction => (
+                                    <tr key={transaction._id}>
+                                        <td>
+                                            {formatDate(transaction.createdAt)}
+                                        </td>
+
+                                        <td className="part-number">
+                                            {transaction.part?.partNo || "-"}
+                                        </td>
+
+                                        <td>
+                                            {transaction.part?.description || "-"}
+                                        </td>
+
+                                        <td>{transaction.quantity}</td>
+
+
+                                        <td>
+                                            {transaction.customerName || "-"}
+                                        </td>
+
+                                        <td>{transaction.location}</td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div className="pagination">
+                    <span>
+                        Showing {transactions.length} of {total} transactions
+                    </span>
+
+                    <div>
+                        <button
+                            disabled={page <= 1 || loading}
+                            onClick={() => setPage(p => p - 1)}
+                        >
+                            <ChevronLeft size={17} />
+                        </button>
+
+                        <span>
+                            Page {page} of {totalPages || 1}
+                        </span>
+
+                        <button
+                            disabled={page >= totalPages || loading}
+                            onClick={() => setPage(p => p + 1)}
+                        >
+                            <ChevronRight size={17} />
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    );
+}
+
+export default Transactions;
