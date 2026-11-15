@@ -8,7 +8,7 @@ import {
     ChevronRight
 } from "lucide-react";
 
-const API = "http://localhost:5000/api/transactions";
+const API = "https://ss-inventory.onrender.com/api/transactions";
 
 function Transactions() {
     const [transactions, setTransactions] = useState([]);

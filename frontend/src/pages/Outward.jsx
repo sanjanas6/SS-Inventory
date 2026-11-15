@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { ScanBarcode, Trash2, Package, RefreshCw } from "lucide-react";
 
-const API = "http://localhost:5000/api/outward";
+const API = "https://ss-inventory.onrender.com/api/outward";
 
 function Outward() {
     const [customerName, setCustomerName] = useState("");

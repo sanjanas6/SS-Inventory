@@ -15,7 +15,7 @@ import {
     Pencil
 } from "lucide-react";
 
-const API = "http://localhost:5000/api/parts";
+const API = "https://ss-inventory.onrender.com/api/parts";
 
 function PartsMaster() {
     const [parts, setParts] = useState([]);

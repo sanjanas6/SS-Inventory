@@ -53,7 +53,7 @@ function ExcelImport() {
             formData.append("file", file);
 
             const response = await axios.post(
-                "http://localhost:5000/api/import/preview",
+                "https://ss-inventory.onrender.com/api/import/preview",
                 formData
             );
 
@@ -96,7 +96,7 @@ function ExcelImport() {
             formData.append("file", file);
 
             const response = await axios.post(
-                "http://localhost:5000/api/import/excel",
+                "https://ss-inventory.onrender.com/api/import/excel",
                 formData
             );
 

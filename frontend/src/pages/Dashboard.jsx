@@ -13,7 +13,7 @@ import {
   Barcode
 } from "lucide-react";
 
-const API = "http://localhost:5000/api/dashboard/summary";
+const API = "https://ss-inventory.onrender.com/api/dashboard/summary";
 
 function Dashboard() {
   const [stats, setStats] = useState({
