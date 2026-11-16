@@ -60,14 +60,39 @@ router.get("/barcode/:barcode", async (req, res) => {
 // Issue multiple tools to one customer
 
 router.post("/", async (req, res) => {
-    const { customerName, items } = req.body;
+    const {
+        customerName,
+        vrn,
+        manualNo,
+        issueDate,
+        issuedBy,
+        items
+    } = req.body;
 
     const cleanCustomerName = String(customerName || "").trim();
+    const cleanVRN = String(vrn || "").trim();
+    const cleanManualNo = String(manualNo || "").trim();
+    const cleanIssuedBy = String(issuedBy || "").trim();
+    const parsedIssueDate = new Date(issueDate);
 
     if (!cleanCustomerName) {
         return res.status(400).json({
             success: false,
             message: "Customer name is required."
+        });
+    }
+
+    if (!cleanVRN || !cleanManualNo || !cleanIssuedBy || !issueDate) {
+        return res.status(400).json({
+            success: false,
+            message: "VRN, Manual No., Date and Issued By are required."
+        });
+    }
+
+    if (isNaN(parsedIssueDate.getTime())) {
+        return res.status(400).json({
+            success: false,
+            message: "Please enter a valid issue date."
         });
     }
 
@@ -198,13 +223,21 @@ router.post("/", async (req, res) => {
                     quantity: deductQuantity
                 });
 
+
+
                 transactionRecords.push({
                     part: part._id,
                     location: inventory.location,
                     type: "OUTWARD",
                     quantity: deductQuantity,
                     balanceAfter: updatedInventory.quantity,
+
                     customerName: cleanCustomerName,
+                    vrn: cleanVRN,
+                    manualNo: cleanManualNo,
+                    issueDate: parsedIssueDate,
+                    issuedBy: cleanIssuedBy,
+
                     issueBatchId: batchId
                 });
 
@@ -235,6 +268,10 @@ router.post("/", async (req, res) => {
             message: "Tools issued successfully!",
             issueBatchId: batchId,
             customerName: cleanCustomerName,
+            vrn: cleanVRN,
+            manualNo: cleanManualNo,
+            issueDate: parsedIssueDate,
+            issuedBy: cleanIssuedBy,
             totalTools: Array.from(itemMap.values()).reduce(
                 (sum, quantity) => sum + quantity,
                 0

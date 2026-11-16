@@ -41,6 +41,37 @@ const transactionSchema = new mongoose.Schema(
             }
         },
 
+        vrn: {
+            type: String,
+            trim: true,
+            required: function () {
+                return this.type === "OUTWARD";
+            }
+        },
+
+        manualNo: {
+            type: String,
+            trim: true,
+            required: function () {
+                return this.type === "OUTWARD";
+            }
+        },
+
+        issueDate: {
+            type: Date,
+            required: function () {
+                return this.type === "OUTWARD";
+            }
+        },
+
+        issuedBy: {
+            type: String,
+            trim: true,
+            required: function () {
+                return this.type === "OUTWARD";
+            }
+        },
+
         // Groups multiple tools issued in one submission
         issueBatchId: {
             type: mongoose.Schema.Types.ObjectId,

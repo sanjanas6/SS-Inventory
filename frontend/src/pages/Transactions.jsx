@@ -121,11 +121,14 @@ function Transactions() {
                     <table>
                         <thead>
                             <tr>
-                                <th>Date & Time</th>
+                                <th>Issue Date</th>
+                                <th>VRN / Vehicle No.</th>
+                                <th>Manual No.</th>
                                 <th>Part Number</th>
                                 <th>Description</th>
                                 <th>Quantity</th>
                                 <th>Customer Name</th>
+                                <th>Issued By</th>
                                 <th>Location</th>
                             </tr>
                         </thead>
@@ -143,8 +146,18 @@ function Transactions() {
                                 transactions.map(transaction => (
                                     <tr key={transaction._id}>
                                         <td>
-                                            {formatDate(transaction.createdAt)}
+                                            {transaction.issueDate
+                                                ? new Date(transaction.issueDate).toLocaleDateString("en-IN", {
+                                                    day: "2-digit",
+                                                    month: "short",
+                                                    year: "numeric"
+                                                })
+                                                : "-"}
                                         </td>
+
+                                        <td>{transaction.vrn || "-"}</td>
+
+                                        <td>{transaction.manualNo || "-"}</td>
 
                                         <td className="part-number">
                                             {transaction.part?.partNo || "-"}
@@ -156,12 +169,11 @@ function Transactions() {
 
                                         <td>{transaction.quantity}</td>
 
+                                        <td>{transaction.customerName || "-"}</td>
 
-                                        <td>
-                                            {transaction.customerName || "-"}
-                                        </td>
+                                        <td>{transaction.issuedBy || "-"}</td>
 
-                                        <td>{transaction.location}</td>
+                                        <td>{transaction.location || "-"}</td>
                                     </tr>
                                 ))
                             )}

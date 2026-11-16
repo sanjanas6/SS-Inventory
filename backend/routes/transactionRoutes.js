@@ -32,12 +32,18 @@ router.get("/", async (req, res) => {
                 const description = transaction.part?.description || "";
                 const customerName = transaction.customerName || "";
                 const location = transaction.location || "";
+const vrn = transaction.vrn || "";
+const manualNo = transaction.manualNo || "";
+const issuedBy = transaction.issuedBy || "";
 
                 return (
                     partNo.toLowerCase().includes(searchText) ||
                     description.toLowerCase().includes(searchText) ||
                     customerName.toLowerCase().includes(searchText) ||
-                    location.toLowerCase().includes(searchText)
+                    location.toLowerCase().includes(searchText) ||
+                    vrn.toLowerCase().includes(searchText) ||
+                    manualNo.toLowerCase().includes(searchText) ||
+                    issuedBy.toLowerCase().includes(searchText)
                 );
             });
         }
