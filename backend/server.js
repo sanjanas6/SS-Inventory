@@ -1,4 +1,3 @@
-
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
@@ -11,15 +10,51 @@ const partRoutes = require("./routes/partRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
 const outwardRoutes = require("./routes/outwardRoutes");
 const transactionRoutes = require("./routes/transactionRoutes");
+const authRoutes = require("./routes/authRoutes");
+const {
+    authenticateToken,
+    authorizeRoles
+} = require("./middleware/authMiddleware");
 
-// Middleware
-app.use(cors());
-app.use(express.json());
-app.use("/api/import", importRoutes);
-app.use("/api/parts", partRoutes);
-app.use("/api/dashboard", dashboardRoutes);
-app.use("/api/outward", outwardRoutes);
-app.use("/api/transactions", transactionRoutes);
+// Authentication
+app.use("/api/auth", authRoutes);
+
+// ADMIN ONLY ROUTES
+app.use(
+    "/api/import",
+    authenticateToken,
+    authorizeRoles("ADMIN"),
+    importRoutes
+);
+
+app.use(
+    "/api/parts",
+    authenticateToken,
+    authorizeRoles("ADMIN"),
+    partRoutes
+);
+
+app.use(
+    "/api/dashboard",
+    authenticateToken,
+    authorizeRoles("ADMIN"),
+    dashboardRoutes
+);
+
+// ADMIN + STORE MANAGER ROUTES
+app.use(
+    "/api/outward",
+    authenticateToken,
+    authorizeRoles("ADMIN", "STORE_MANAGER"),
+    outwardRoutes
+);
+
+app.use(
+    "/api/transactions",
+    authenticateToken,
+    authorizeRoles("ADMIN", "STORE_MANAGER"),
+    transactionRoutes
+);
 
 // Test API
 app.get("/", (req, res) => {
