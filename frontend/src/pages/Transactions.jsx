@@ -5,7 +5,8 @@ import {
     Search,
     RefreshCw,
     ChevronLeft,
-    ChevronRight
+    ChevronRight,
+    Download
 } from "lucide-react";
 
 const API = "https://ss-inventory.onrender.com/api/transactions";
@@ -20,6 +21,7 @@ function Transactions() {
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [exporting, setExporting] = useState(false);
 
     const fetchTransactions = async () => {
         try {
@@ -62,6 +64,95 @@ function Transactions() {
         });
     };
 
+
+    const handleExportCSV = async () => {
+        try {
+            setExporting(true);
+            setError("");
+
+            // Fetch ALL matching transactions, not just current page
+            const response = await axios.get(`${API}/export`, {
+                params: { search }
+            });
+
+            const allTransactions = response.data.transactions || [];
+
+            if (allTransactions.length === 0) {
+                setError("No transactions available to export.");
+                return;
+            }
+
+            const headers = [
+                "Issue Date",
+                "VRN / Vehicle No.",
+                "Manual No.",
+                "Part Number",
+                "Description",
+                "Quantity",
+                "Customer Name",
+                "Issued By",
+                "Location"
+            ];
+
+            const escapeCSV = (value) => {
+                let text = String(value ?? "");
+
+                // Prevent spreadsheet formula injection
+                if (/^[=+\-@\t\r]/.test(text)) {
+                    text = "'" + text;
+                }
+
+                return `"${text.replace(/"/g, '""')}"`;
+            };
+
+            const rows = allTransactions.map(transaction => [
+                transaction.issueDate
+                    ? new Date(transaction.issueDate).toLocaleDateString("en-IN")
+                    : "-",
+                transaction.vrn || "-",
+                transaction.manualNo || "-",
+                transaction.part?.partNo || "-",
+                transaction.part?.description || "-",
+                transaction.quantity ?? 0,
+                transaction.customerName || "-",
+                transaction.issuedBy || "-",
+                transaction.location || "-"
+            ]);
+
+            const csvContent = [
+                headers.map(escapeCSV).join(","),
+                ...rows.map(row => row.map(escapeCSV).join(","))
+            ].join("\r\n");
+
+            // BOM helps Excel display CSV correctly
+            const blob = new Blob(
+                ["\uFEFF" + csvContent],
+                { type: "text/csv;charset=utf-8;" }
+            );
+
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+
+            link.href = url;
+            link.download = `SS-Motors-Transactions-${new Date().toISOString().slice(0, 10)}.csv`;
+
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            URL.revokeObjectURL(url);
+
+        } catch (err) {
+            setError(
+                err.response?.data?.message ||
+                "Unable to export transactions."
+            );
+        } finally {
+            setExporting(false);
+        }
+    };
+
+
     return (
         <div className="parts-page">
 
@@ -71,14 +162,25 @@ function Transactions() {
                     <p>Track all tools issued to customers.</p>
                 </div>
 
-                <button
-                    className="refresh-btn"
-                    onClick={fetchTransactions}
-                    disabled={loading}
-                >
-                    <RefreshCw size={16} />
-                    Refresh
-                </button>
+                <div className="parts-actions">
+                    <button
+                        className="refresh-btn"
+                        onClick={handleExportCSV}
+                        disabled={exporting || loading}
+                    >
+                        <Download size={16} />
+                        {exporting ? "Exporting..." : "Export CSV"}
+                    </button>
+
+                    <button
+                        className="refresh-btn"
+                        onClick={fetchTransactions}
+                        disabled={loading}
+                    >
+                        <RefreshCw size={16} />
+                        Refresh
+                    </button>
+                </div>
             </div>
 
             {error && (

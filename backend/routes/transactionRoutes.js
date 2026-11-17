@@ -77,4 +77,60 @@ const issuedBy = transaction.issuedBy || "";
     }
 });
 
+
+// GET /api/transactions/export
+// Export ALL matching outward transactions (not just current page)
+
+router.get("/export", async (req, res) => {
+    try {
+        const { search } = req.query;
+
+        const filter = { type: "OUTWARD" };
+
+        let transactions = await Transaction.find(filter)
+            .populate("part", "partNo description barcode")
+            .sort({ createdAt: -1 })
+            .lean();
+
+        // Apply same search filter as transaction history
+        if (search && search.trim()) {
+            const searchText = search.trim().toLowerCase();
+
+            transactions = transactions.filter(transaction => {
+                const partNo = transaction.part?.partNo || "";
+                const description = transaction.part?.description || "";
+                const customerName = transaction.customerName || "";
+                const location = transaction.location || "";
+                const vrn = transaction.vrn || "";
+                const manualNo = transaction.manualNo || "";
+                const issuedBy = transaction.issuedBy || "";
+
+                return (
+                    partNo.toLowerCase().includes(searchText) ||
+                    description.toLowerCase().includes(searchText) ||
+                    customerName.toLowerCase().includes(searchText) ||
+                    location.toLowerCase().includes(searchText) ||
+                    vrn.toLowerCase().includes(searchText) ||
+                    manualNo.toLowerCase().includes(searchText) ||
+                    issuedBy.toLowerCase().includes(searchText)
+                );
+            });
+        }
+
+        return res.json({
+            success: true,
+            total: transactions.length,
+            transactions
+        });
+
+    } catch (error) {
+        console.error("Transaction Export Error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Unable to export transactions."
+        });
+    }
+});
+
 module.exports = router;
