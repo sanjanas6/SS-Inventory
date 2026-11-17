@@ -16,6 +16,18 @@ const {
     authorizeRoles
 } = require("./middleware/authMiddleware");
 
+app.use(cors({
+    origin: [
+        "http://localhost:5173",
+        "http://localhost:5174"
+    ],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"]
+}));
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 // Authentication
 app.use("/api/auth", authRoutes);
 
