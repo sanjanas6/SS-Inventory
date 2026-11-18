@@ -5,7 +5,6 @@ const XLSX = require("xlsx");
 
 const Part = require("../models/Part");
 const Inventory = require("../models/Inventory");
-const Transaction = require("../models/Transaction");
 
 const router = express.Router();
 
@@ -329,17 +328,6 @@ router.post("/excel", upload.single("file"), async (req, res) => {
     }));
 
     await Inventory.insertMany(inventoryDocs);
-
-    // Save opening stock transaction history
-    const transactionDocs = importedRows.map(item => ({
-      part: partMap.get(item.partNo),
-      location: item.location,
-      type: "OPENING",
-      quantity: item.quantity,
-      balanceAfter: item.quantity
-    }));
-
-    await Transaction.insertMany(transactionDocs);
 
     return res.status(200).json({
       message: "Excel imported successfully",
