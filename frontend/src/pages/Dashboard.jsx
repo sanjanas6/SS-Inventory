@@ -134,35 +134,6 @@ function Dashboard() {
         </div>
       )}
 
-      {/* Quick Actions */}
-      <div className="quick-section">
-
-        <h3>Quick Actions</h3>
-
-        <div className="quick-grid">
-
-          <button className="quick-card">
-            <Upload size={22} />
-            <span>Import Excel</span>
-            <small>Upload inventory data</small>
-          </button>
-
-          <button className="quick-card">
-            <ArrowDownRight size={22} />
-            <span>Stock Outward</span>
-            <small>Issue parts using scanner</small>
-          </button>
-
-          <button className="quick-card">
-            <Plus size={22} />
-            <span>Stock Inward</span>
-            <small>Add received inventory</small>
-          </button>
-
-        </div>
-
-      </div>
-
       {/* Recent Inventory */}
       <div className="table-section">
 

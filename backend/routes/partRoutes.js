@@ -170,15 +170,6 @@ router.post("/", async (req, res) => {
       quantity: parsedQuantity
     });
 
-    // Create Opening Transaction
-    await Transaction.create({
-      part: savedPart._id,
-      location: cleanLocation,
-      type: "OPENING",
-      quantity: parsedQuantity,
-      balanceAfter: parsedQuantity
-    });
-
     return res.status(201).json({
       success: true,
       message: "New part added successfully!",
