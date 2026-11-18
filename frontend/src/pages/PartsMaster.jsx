@@ -12,7 +12,8 @@ import {
     X,
     Barcode,
     Printer,
-    Pencil
+    Pencil,
+    Trash2
 } from "lucide-react";
 
 const API = "https://ss-inventory.onrender.com/api/parts";
@@ -119,6 +120,31 @@ function PartsMaster() {
         }));
     };
 
+    const handleDeletePart = async (part) => {
+        const confirmed = window.confirm(
+            `Are you sure you want to delete ${part.partNo}?\n\n${part.description}`
+        );
+
+        if (!confirmed) return;
+
+        try {
+            setError("");
+            setSuccess("");
+
+            const response = await axios.delete(`${API}/${part._id}`);
+
+            setSuccess(response.data.message);
+
+            await fetchParts();
+
+        } catch (err) {
+            setError(
+                err.response?.data?.message ||
+                "Unable to delete part."
+            );
+        }
+    };
+
     const handleUpdatePart = async (e) => {
         e.preventDefault();
 
@@ -130,13 +156,13 @@ function PartsMaster() {
             setSuccess("");
 
             const response = await axios.patch(
-    `${API}/${editingPart._id}`,
-    {
-        mrp: Number(editForm.mrp),
-        location: editForm.location.trim(),
-        quantity: Number(editForm.quantity)
-    }
-);
+                `${API}/${editingPart._id}`,
+                {
+                    mrp: Number(editForm.mrp),
+                    location: editForm.location.trim(),
+                    quantity: Number(editForm.quantity)
+                }
+            );
 
             setShowEditForm(false);
             setEditingPart(null);
@@ -661,6 +687,15 @@ function PartsMaster() {
                                                 >
                                                     <Printer size={15} />
                                                     {printingId === part._id ? "Printing..." : "Print"}
+                                                </button>
+
+                                                <button
+                                                    type="button"
+                                                    className="refresh-btn"
+                                                    onClick={() => handleDeletePart(part)}
+                                                >
+                                                    <Trash2 size={15} />
+                                                    Delete
                                                 </button>
                                             </div>
                                         </td>

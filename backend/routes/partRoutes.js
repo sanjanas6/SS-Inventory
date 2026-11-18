@@ -396,6 +396,76 @@ router.patch("/:id", async (req, res) => {
     }
 });
 
+// DELETE PART
+// DELETE /api/parts/:id
+
+router.delete("/:id", async (req, res) => {
+    try {
+        const partId = req.params.id;
+
+        const part = await Part.findById(partId);
+
+        if (!part) {
+            return res.status(404).json({
+                success: false,
+                message: "Part not found."
+            });
+        }
+
+        // Check inventory stock
+        const inventories = await Inventory.find({
+            part: partId
+        });
+
+        const totalStock = inventories.reduce(
+            (sum, item) => sum + item.quantity,
+            0
+        );
+
+        if (totalStock > 0) {
+            return res.status(400).json({
+                success: false,
+                message: `Cannot delete ${part.partNo}. Available stock is ${totalStock}. Please clear stock first.`
+            });
+        }
+
+        // Check transaction history
+        const transactionExists = await Transaction.exists({
+            part: partId
+        });
+
+        if (transactionExists) {
+            return res.status(400).json({
+                success: false,
+                message: `Cannot delete ${part.partNo} because transaction history exists.`
+            });
+        }
+
+        // Delete inventory records
+        await Inventory.deleteMany({
+            part: partId
+        });
+
+        // Delete part
+        await Part.deleteOne({
+            _id: partId
+        });
+
+        return res.json({
+            success: true,
+            message: `${part.partNo} deleted successfully.`
+        });
+
+    } catch (error) {
+        console.error("Delete Part Error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Unable to delete part.",
+            error: error.message
+        });
+    }
+});
 
 
 module.exports = router;
