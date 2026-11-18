@@ -896,5 +896,4 @@ function PartsMaster() {
         </div>
     );
 }
-
 export default PartsMaster;
