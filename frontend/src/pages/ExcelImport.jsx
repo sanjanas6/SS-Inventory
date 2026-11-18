@@ -56,7 +56,6 @@ function ExcelImport() {
                 "https://ss-inventory.onrender.com/api/import/preview",
                 formData
             );
-
             setData(response.data);
 
         } catch (err) {
