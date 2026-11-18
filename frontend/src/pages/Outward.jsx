@@ -74,7 +74,8 @@ function Outward() {
                     ...prev,
                     {
                         ...part,
-                        issueQty: 1
+                        issueQty: 1,
+                        mrp: part.mrp ?? 0
                     }
                 ];
             });
@@ -97,6 +98,17 @@ function Outward() {
     const handleRemoveItem = (partId) => {
         setScannedItems(prev =>
             prev.filter(item => item._id !== partId)
+        );
+    };
+
+    // Update MRP for scanned tool
+    const handleMrpChange = (partId, value) => {
+        setScannedItems(prev =>
+            prev.map(item =>
+                item._id === partId
+                    ? { ...item, mrp: value }
+                    : item
+            )
         );
     };
 
@@ -134,6 +146,18 @@ function Outward() {
             return;
         }
 
+        const invalidMrpItem = scannedItems.find(
+    item =>
+        item.mrp === "" ||
+        !Number.isFinite(Number(item.mrp)) ||
+        Number(item.mrp) < 0
+);
+
+if (invalidMrpItem) {
+    setError(`Please enter a valid MRP for ${invalidMrpItem.partNo}.`);
+    return;
+}
+
         try {
             setSubmitting(true);
             setError("");
@@ -147,14 +171,16 @@ function Outward() {
                 issuedBy: issuedBy.trim(),
 
                 items: scannedItems.map(item => ({
-                    partId: item._id,
-                    quantity: item.issueQty
-                }))
+    partId: item._id,
+    quantity: item.issueQty,
+    mrp: Number(item.mrp)
+}))
             });
 
+           
             setSuccess(
-                `Successfully issued ${response.data.totalTools} tool(s) to ${customerName}.`
-            );
+    `Successfully issued ${response.data.totalTools} tool(s) to ${customerName}. Invoice No: ${response.data.invoiceNo}`
+);
 
             setVrn("");
             setManualNo("");
@@ -346,6 +372,7 @@ function Outward() {
                                 <tr>
                                     <th>Part Number</th>
                                     <th>Description</th>
+                                    <th>MRP</th>
                                     <th>Available Stock</th>
                                     <th>Issue Quantity</th>
                                     <th>Action</th>
@@ -364,6 +391,16 @@ function Outward() {
                                         <tr key={item._id}>
                                             <td>{item.partNo}</td>
                                             <td>{item.description}</td>
+                                            <td>
+    <input
+        type="number"
+        min="0"
+        step="0.01"
+        value={item.mrp}
+        onChange={(e) => handleMrpChange(item._id, e.target.value)}
+        style={{ width: "110px" }}
+    />
+</td>
                                             <td>{item.availableStock}</td>
                                             <td>
                                                 <span className="quantity-badge">

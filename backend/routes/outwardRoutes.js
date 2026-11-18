@@ -5,6 +5,7 @@ const mongoose = require("mongoose");
 const Part = require("../models/Part");
 const Inventory = require("../models/Inventory");
 const Transaction = require("../models/Transaction");
+const InvoiceCounter = require("../models/InvoiceCounter");
 
 const router = express.Router();
 
@@ -109,6 +110,7 @@ router.post("/", async (req, res) => {
     for (const item of items) {
         const partId = item?.partId;
         const quantity = Number(item?.quantity);
+        const mrp = Number(item?.mrp);
 
         if (!mongoose.Types.ObjectId.isValid(partId)) {
             return res.status(400).json({
@@ -124,15 +126,36 @@ router.post("/", async (req, res) => {
             });
         }
 
+        if (!Number.isFinite(mrp) || mrp < 0) {
+            return res.status(400).json({
+                success: false,
+                message: "Valid MRP is required."
+            });
+        }
+
         const id = String(partId);
 
-        itemMap.set(
-            id,
-            (itemMap.get(id) || 0) + quantity
-        );
+        if (itemMap.has(id)) {
+            const existingItem = itemMap.get(id);
+
+            if (existingItem.mrp !== mrp) {
+                return res.status(400).json({
+                    success: false,
+                    message: "MRP must be the same for duplicate parts in one issue."
+                });
+            }
+
+            existingItem.quantity += quantity;
+        } else {
+            itemMap.set(id, {
+                quantity,
+                mrp
+            });
+        }
     }
 
     const batchId = new mongoose.Types.ObjectId();
+
 
     // Keep track of stock deductions for compensation
     const stockDeductions = [];
@@ -141,7 +164,10 @@ router.post("/", async (req, res) => {
         const preparedItems = [];
 
         // STEP 1: Validate stock for ALL parts before deduction
-        for (const [partId, issueQuantity] of itemMap) {
+        for (const [partId, itemData] of itemMap) {
+
+            const issueQuantity = itemData.quantity;
+            const mrp = itemData.mrp;
 
             const part = await Part.findById(partId);
 
@@ -172,9 +198,22 @@ router.post("/", async (req, res) => {
             preparedItems.push({
                 part,
                 issueQuantity,
+                mrp,
                 inventories
             });
         }
+
+        // Generate invoice number after stock validation
+        const counter = await InvoiceCounter.findOneAndUpdate(
+            { name: "outwardInvoice" },
+            { $inc: { sequence: 1 } },
+            {
+                new: true,
+                upsert: true
+            }
+        );
+
+        const invoiceNo = `SSM-${String(counter.sequence).padStart(6, "0")}`;
 
         // STEP 2: Deduct stock
         const transactionRecords = [];
@@ -182,7 +221,7 @@ router.post("/", async (req, res) => {
 
         for (const prepared of preparedItems) {
 
-            const { part, issueQuantity, inventories } = prepared;
+            const { part, issueQuantity, mrp, inventories } = prepared;
 
             let remainingToIssue = issueQuantity;
 
@@ -238,6 +277,9 @@ router.post("/", async (req, res) => {
                     issueDate: parsedIssueDate,
                     issuedBy: cleanIssuedBy,
 
+                    mrp: mrp,
+                    invoiceNo: invoiceNo,
+
                     issueBatchId: batchId
                 });
 
@@ -247,7 +289,8 @@ router.post("/", async (req, res) => {
                     barcode: part.barcode,
                     location: inventory.location,
                     issuedQuantity: deductQuantity,
-                    balanceAfter: updatedInventory.quantity
+                    balanceAfter: updatedInventory.quantity,
+                    mrp: mrp
                 });
 
                 remainingToIssue -= deductQuantity;
@@ -267,15 +310,16 @@ router.post("/", async (req, res) => {
             success: true,
             message: "Tools issued successfully!",
             issueBatchId: batchId,
+            invoiceNo: invoiceNo,
             customerName: cleanCustomerName,
             vrn: cleanVRN,
             manualNo: cleanManualNo,
             issueDate: parsedIssueDate,
             issuedBy: cleanIssuedBy,
             totalTools: Array.from(itemMap.values()).reduce(
-                (sum, quantity) => sum + quantity,
-                0
-            ),
+    (sum, item) => sum + item.quantity,
+    0
+),
             items: issuedItems
         });
 
