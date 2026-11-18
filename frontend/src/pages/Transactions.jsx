@@ -223,6 +223,7 @@ function Transactions() {
                     <table>
                         <thead>
                             <tr>
+                                <th>Invoice No.</th>
                                 <th>Issue Date</th>
                                 <th>VRN / Vehicle No.</th>
                                 <th>Manual No.</th>
@@ -248,6 +249,7 @@ function Transactions() {
                             ) : (
                                 transactions.map(transaction => (
                                     <tr key={transaction._id}>
+                                        <td>{transaction.invoiceNo || "-"}</td>
                                         <td>
                                             {transaction.issueDate
                                                 ? new Date(transaction.issueDate).toLocaleDateString("en-IN", {

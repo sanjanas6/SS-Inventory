@@ -73,20 +73,20 @@ const transactionSchema = new mongoose.Schema(
         },
 
         mrp: {
-    type: Number,
-    min: 0,
-    required: function () {
-        return this.type === "OUTWARD";
-    }
-},
+            type: Number,
+            min: 0,
+            required: function () {
+                return this.type === "OUTWARD";
+            }
+        },
 
-invoiceNo: {
-    type: String,
-    trim: true,
-    required: function () {
-        return this.type === "OUTWARD";
-    }
-},
+        invoiceNo: {
+            type: String,
+            trim: true,
+            required: function () {
+                return this.type === "OUTWARD";
+            }
+        },
 
         // Groups multiple tools issued in one submission
         issueBatchId: {
