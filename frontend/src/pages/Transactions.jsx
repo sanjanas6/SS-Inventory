@@ -228,6 +228,7 @@ function Transactions() {
                                 <th>Manual No.</th>
                                 <th>Part Number</th>
                                 <th>Description</th>
+                                <th>MRP</th>
                                 <th>Quantity</th>
                                 <th>Customer Name</th>
                                 <th>Issued By</th>
@@ -269,6 +270,7 @@ function Transactions() {
                                             {transaction.part?.description || "-"}
                                         </td>
 
+                                        <td>{transaction.mrp}</td>
                                         <td>{transaction.quantity}</td>
 
                                         <td>{transaction.customerName || "-"}</td>
